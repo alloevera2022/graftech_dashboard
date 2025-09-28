@@ -1,0 +1,309 @@
+    <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд управления ресурсами команд</title>
+    <link rel="icon" href="лого-графтех-с-кругом-900.png" type="image/png">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo-section">
+                    <img src="лого-графтех-с-кругом-900.png" alt="ГрафТех" class="logo">
+                    <h1>Дашборд ресурсов команд</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="addResourceBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Добавить ресурс
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab active" data-tab="overview">
+                <i class="fas fa-tachometer-alt"></i> Обзор
+            </button>
+            <button class="tab" data-tab="calendar">
+                <i class="fas fa-calendar-alt"></i> Календарь
+            </button>
+            <button class="tab" data-tab="planning">
+                <i class="fas fa-tasks"></i> Планирование
+            </button>
+            <button class="tab" data-tab="analytics">
+                <i class="fas fa-chart-bar"></i> Аналитика
+            </button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <!-- Month Selector -->
+                <div class="month-selector">
+                    <button id="prevMonthBtn" class="btn btn-outline">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonthDisplay">Январь 2025</h2>
+                    <button id="nextMonthBtn" class="btn btn-outline">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Участников</h3>
+                            <p class="stat-number" id="totalMembers">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-project-diagram"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Проектов</h3>
+                            <p class="stat-number" id="totalProjects">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Часов в месяц</h3>
+                            <p class="stat-number" id="monthlyHours">0</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-ruble-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Стоимость</h3>
+                            <p class="stat-number" id="monthlyCost">0 ₽</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Hierarchy -->
+                <div class="products-hierarchy">
+                    <div id="productsContainer" class="products-container">
+                        <!-- Products will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div id="calendar" class="tab-content">
+                <div class="calendar-controls">
+                    <button id="prevMonth" class="btn btn-outline">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonth">Январь 2025</h2>
+                    <button id="nextMonth" class="btn btn-outline">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be generated here -->
+                </div>
+            </div>
+
+            <!-- Planning Tab -->
+            <div id="planning" class="tab-content">
+                <div class="planning-header">
+                    <h2>Планирование ресурсов</h2>
+                    <button id="addPlanningBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Новый план
+                    </button>
+                </div>
+                <div class="planning-content">
+                    <div class="planning-form" id="planningForm" style="display: none;">
+                        <h3>Добавить планирование</h3>
+                        <form id="resourceForm">
+                            <div class="form-group">
+                                <label for="projectSelect">Проект:</label>
+                                <select id="projectSelect" required>
+                                    <option value="">Выберите проект</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="teamSelect">Команда:</label>
+                                <select id="teamSelect" required>
+                                    <option value="">Выберите команду</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="startDate">Дата начала:</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="endDate">Дата окончания:</label>
+                                <input type="date" id="endDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="hours">Часы в неделю:</label>
+                                <input type="number" id="hours" min="1" max="40" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Сохранить</button>
+                                <button type="button" id="cancelBtn" class="btn btn-secondary">Отмена</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="planning-list" id="planningList">
+                        <!-- Planning items will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics" class="tab-content">
+                <div class="analytics-header">
+                    <h2>Аналитика расходов</h2>
+                    <div class="analytics-controls">
+                        <select id="analyticsMonth">
+                            <option value="2025-01">Январь 2025</option>
+                            <option value="2025-02">Февраль 2025</option>
+                            <option value="2025-03">Март 2025</option>
+                            <option value="2025-04">Апрель 2025</option>
+                            <option value="2025-05">Май 2025</option>
+                            <option value="2025-06">Июнь 2025</option>
+                            <option value="2025-07">Июль 2025</option>
+                            <option value="2025-08">Август 2025</option>
+                            <option value="2025-09">Сентябрь 2025</option>
+                            <option value="2025-10">Октябрь 2025</option>
+                            <option value="2025-11">Ноябрь 2025</option>
+                            <option value="2025-12">Декабрь 2025</option>
+                        </select>
+                        <select id="chartType">
+                            <option value="cost">Расходы (₽)</option>
+                            <option value="hours">Часы</option>
+                            <option value="members">Участники</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="analytics-content">
+                    <div class="chart-container">
+                        <h3>Расходы по продуктам и проектам</h3>
+                        <canvas id="productsChart" width="400" height="300"></canvas>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="card">
+                            <h3>Топ проектов по расходам</h3>
+                            <div id="topProjectsChart"></div>
+                        </div>
+                        <div class="card">
+                            <h3>Распределение по командам</h3>
+                            <div id="teamsDistributionChart"></div>
+                        </div>
+                    </div>
+                    <div class="analytics-summary">
+                        <div class="summary-card">
+                            <h3>Общая статистика</h3>
+                            <div id="summaryStats"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for adding/editing resources -->
+    <div id="resourceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Добавить ресурс</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="addResourceForm">
+                    <div class="form-group">
+                        <label for="resourceProduct">Продукт:</label>
+                        <select id="resourceProduct" required>
+                            <option value="">Выберите продукт</option>
+                            <option value="Автограф.PRO">Автограф.PRO</option>
+                            <option value="ГрафБорд">ГрафБорд</option>
+                            <option value="Автограф.Стандарт">Автограф.Стандарт</option>
+                            <option value="Автограф.MVP">Автограф.MVP</option>
+                            <option value="ГрафДок">ГрафДок</option>
+                            <option value="Просмоторщик DWG">Просмоторщик DWG</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceProject">Проект:</label>
+                        <input type="text" id="resourceProject" placeholder="Название проекта" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceName">Участник команды:</label>
+                        <input type="text" id="resourceName" placeholder="Имя участника" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceTeam">Команда:</label>
+                        <select id="resourceTeam" required>
+                            <option value="">Выберите команду</option>
+                            <option value="ГрафТех">ГрафТех</option>
+                            <option value="Подвал">Подвал</option>
+                            <option value="Gravity">Gravity</option>
+                            <option value="8мост">8мост</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceHours">Количество часов в месяц:</label>
+                        <input type="number" id="resourceHours" min="1" max="200" placeholder="Часов в месяц" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceRate">Часовая ставка (₽):</label>
+                        <input type="number" id="resourceRate" min="100" step="100" placeholder="Ставка за час" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceMonth">Месяц:</label>
+                        <select id="resourceMonth" required>
+                            <option value="">Выберите месяц</option>
+                            <option value="2025-01">Январь 2025</option>
+                            <option value="2025-02">Февраль 2025</option>
+                            <option value="2025-03">Март 2025</option>
+                            <option value="2025-04">Апрель 2025</option>
+                            <option value="2025-05">Май 2025</option>
+                            <option value="2025-06">Июнь 2025</option>
+                            <option value="2025-07">Июль 2025</option>
+                            <option value="2025-08">Август 2025</option>
+                            <option value="2025-09">Сентябрь 2025</option>
+                            <option value="2025-10">Октябрь 2025</option>
+                            <option value="2025-11">Ноябрь 2025</option>
+                            <option value="2025-12">Декабрь 2025</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="saveResource" class="btn btn-primary">Сохранить</button>
+                <button type="button" id="cancelResource" class="btn btn-secondary">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS (optional; fill config below to enable multi-user DB) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Fill these with your Supabase project credentials to enable cloud persistence
+        // You can keep them empty to work locally without a database
+        window.SUPABASE_URL = "https://lyjkvthghmsvasrsikfb.supabase.co"; // e.g. https://xyzcompany.supabase.co
+        window.SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5amt2dGhnaG1zdmFzcnNpa2ZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNTA4ODIsImV4cCI6MjA3NDYyNjg4Mn0.5RcSF9_k-I_GLI2P7DBeZS99S6oiIX4u2M1gD_pSz0k"; // e.g. eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
+    
