@@ -9,16 +9,69 @@ let currentMonth = new Date().getMonth();
 let currentYear = new Date().getFullYear();
 let supabase = null;
 let isCloudPersistenceEnabled = false;
+let isAuthenticated = false;
+const DASHBOARD_PASSWORD = 'graftech2025'; // Базовый пароль для доступа
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', async function() {
-    initializeApp();
-    initializeSupabaseClient();
-    await bootstrapData();
-    setupEventListeners();
-    updateStats();
-    generateCalendar();
+    // Check if user is already authenticated
+    const savedAuth = localStorage.getItem('dashboard_authenticated');
+    if (savedAuth === 'true') {
+        isAuthenticated = true;
+        document.getElementById('loginModal').style.display = 'none';
+        initializeApp();
+        initializeSupabaseClient();
+        await bootstrapData();
+        setupEventListeners();
+        updateStats();
+        generateCalendar();
+    } else {
+        // Show login modal
+        setupLoginEventListeners();
+    }
 });
+
+// Setup login event listeners
+function setupLoginEventListeners() {
+    document.getElementById('loginBtn').addEventListener('click', handleLogin);
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            handleLogin();
+        }
+    });
+}
+
+// Handle login
+async function handleLogin() {
+    const password = document.getElementById('password').value;
+    
+    if (password === DASHBOARD_PASSWORD) {
+        isAuthenticated = true;
+        localStorage.setItem('dashboard_authenticated', 'true');
+        document.getElementById('loginModal').style.display = 'none';
+        
+        // Initialize app after successful login
+        initializeApp();
+        initializeSupabaseClient();
+        await bootstrapData();
+        setupEventListeners();
+        updateStats();
+        generateCalendar();
+        
+        showMessage('Успешный вход в систему!', 'success');
+    } else {
+        showMessage('Неверный пароль!', 'error');
+        document.getElementById('password').value = '';
+        document.getElementById('password').focus();
+    }
+}
+
+// Logout function
+function logout() {
+    isAuthenticated = false;
+    localStorage.removeItem('dashboard_authenticated');
+    location.reload();
+}
 
 // Initialize application
 function initializeApp() {
@@ -74,6 +127,11 @@ async function bootstrapData() {
     }
     
     updateDisplay();
+    
+    // Update analytics if analytics tab is active
+    if (document.getElementById('analytics').classList.contains('active')) {
+        updateAnalytics();
+    }
 }
 
 // Load sample data from CSV
@@ -153,7 +211,7 @@ function parseCSVData(csvData) {
     
     // Extract team members and their data
     const teamMembers = ['Вика', 'Влад', 'Кирилл', 'Юра', 'Леша', 'Женя', 'Дима', 'Андрей'];
-    const projects = ['Автограф.PRO', 'ГрафБорд', 'Автограф.Стандарт', 'Автограф.MVP', 'ГрафДок', 'Просмоторщик DWG'];
+    const projects = ['Автограф.PRO', 'ГрафБорд', 'Автограф.Стандарт', 'Автограф.MVP', 'ГрафДок', 'Просмоторщик DWG', 'Общее развитие продуктовой линейки'];
     const stacks = ['Битрикс', 'ROR', 'Gravity', '8мост'];
     
     // Create sample resources based on the CSV structure
@@ -175,6 +233,22 @@ function parseCSVData(csvData) {
                 status: 'active'
             });
         }
+    });
+    
+    // Add specific resources for "Общее развитие продуктовой линейки"
+    const productDevelopmentMembers = ['Вика', 'Влад', 'Кирилл'];
+    productDevelopmentMembers.forEach(member => {
+        resources.push({
+            id: Date.now() + Math.random() + 1000,
+            name: member,
+            team: 'ГрафТех',
+            product: 'Общее развитие продуктовой линейки',
+            project: 'Общее развитие продуктовой линейки - Архитектура',
+            hoursPerMonth: 40,
+            hourlyRate: 2500,
+            month: '2025-01',
+            status: 'active'
+        });
     });
     
     // Extract unique projects and teams
@@ -313,6 +387,12 @@ function switchTab(tabName) {
     
     // Update content based on tab
     if (tabName === 'analytics') {
+        // Set current month for analytics if not set
+        const currentMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+        const analyticsMonthSelect = document.getElementById('analyticsMonth');
+        if (analyticsMonthSelect && !analyticsMonthSelect.value) {
+            analyticsMonthSelect.value = currentMonthStr;
+        }
         updateAnalytics();
     }
 }
@@ -333,6 +413,11 @@ function handleFileUpload(file) {
 
 // Save new resource
 function saveResource() {
+    if (!isAuthenticated) {
+        showMessage('Необходима авторизация для выполнения этого действия', 'error');
+        return;
+    }
+    
     const product = document.getElementById('resourceProduct').value;
     const project = document.getElementById('resourceProject').value;
     const name = document.getElementById('resourceName').value;
@@ -431,6 +516,11 @@ function closeModal() {
 
 // Edit resource
 function editResource(id) {
+    if (!isAuthenticated) {
+        showMessage('Необходима авторизация для выполнения этого действия', 'error');
+        return;
+    }
+    
     const resource = resources.find(r => r.id === id);
     if (!resource) return;
     
@@ -449,6 +539,11 @@ function editResource(id) {
 
 // Delete resource
 function deleteResource(id) {
+    if (!isAuthenticated) {
+        showMessage('Необходима авторизация для выполнения этого действия', 'error');
+        return;
+    }
+    
     if (confirm('Вы уверены, что хотите удалить этот ресурс?')) {
         const removed = resources.find(r => r.id === id);
         resources = resources.filter(r => r.id !== id);
@@ -512,6 +607,10 @@ function updateDisplay() {
     updateProductsHierarchy();
     updatePlanningList();
     generateCalendar();
+    // Update analytics if analytics tab is active
+    if (document.getElementById('analytics').classList.contains('active')) {
+        updateAnalytics();
+    }
 }
 
 // Update products hierarchy
@@ -755,6 +854,8 @@ function updateAnalytics() {
     const selectedMonth = document.getElementById('analyticsMonth').value;
     const chartType = document.getElementById('chartType').value;
     
+    console.log('Updating analytics for month:', selectedMonth, 'with', resources.length, 'resources');
+    
     updateProductsChart(selectedMonth, chartType);
     updateTopProjectsChart(selectedMonth);
     updateTeamsDistributionChart(selectedMonth);
@@ -769,7 +870,25 @@ function updateProductsChart(month, chartType) {
         productsChart.destroy();
     }
     
-    const monthResources = resources.filter(r => r.month === month);
+    console.log('Filtering resources for month:', month);
+    console.log('All resources:', resources);
+    
+    const monthResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        console.log('Comparing resource month:', resourceMonth, 'with selected:', month);
+        return resourceMonth === month;
+    });
+    
+    console.log('Filtered month resources:', monthResources);
     
     // Group by product and project
     const productsData = {};
@@ -911,7 +1030,19 @@ function updateProductsChart(month, chartType) {
 
 // Update top projects chart
 function updateTopProjectsChart(month) {
-    const monthResources = resources.filter(r => r.month === month);
+    const monthResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        return resourceMonth === month;
+    });
     const projectData = {};
     
     monthResources.forEach(resource => {
@@ -948,7 +1079,19 @@ function updateTopProjectsChart(month) {
 
 // Update teams distribution chart
 function updateTeamsDistributionChart(month) {
-    const monthResources = resources.filter(r => r.month === month);
+    const monthResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        return resourceMonth === month;
+    });
     const teamData = {};
     
     monthResources.forEach(resource => {
@@ -984,7 +1127,19 @@ function updateTeamsDistributionChart(month) {
 
 // Update summary stats
 function updateSummaryStats(month) {
-    const monthResources = resources.filter(r => r.month === month);
+    const monthResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        return resourceMonth === month;
+    });
     
     const totalCost = monthResources.reduce((sum, r) => sum + ((r.hoursPerMonth || 0) * (r.hourlyRate || 0)), 0);
     const totalHours = monthResources.reduce((sum, r) => sum + (r.hoursPerMonth || 0), 0);
@@ -1041,7 +1196,10 @@ function showMessage(text, type) {
 document.addEventListener('DOMContentLoaded', function() {
     // Set current month for analytics
     const currentMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
-    document.getElementById('analyticsMonth').value = currentMonthStr;
+    const analyticsMonthSelect = document.getElementById('analyticsMonth');
+    if (analyticsMonthSelect) {
+        analyticsMonthSelect.value = currentMonthStr;
+    }
     
     setTimeout(() => {
         if (document.getElementById('analytics').classList.contains('active')) {
@@ -1049,6 +1207,35 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
 });
+
+// Force update analytics (for debugging)
+function forceUpdateAnalytics() {
+    console.log('Force updating analytics...');
+    console.log('Resources count:', resources.length);
+    console.log('Resources:', resources);
+    
+    // Test data filtering
+    const selectedMonth = document.getElementById('analyticsMonth').value;
+    console.log('Selected month:', selectedMonth);
+    
+    const filteredResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        return resourceMonth === selectedMonth;
+    });
+    
+    console.log('Filtered resources for month', selectedMonth, ':', filteredResources);
+    
+    updateAnalytics();
+}
 
 // ============================
 // Supabase helpers (optional)
