@@ -191,8 +191,8 @@
                             <option value="2025-12">Декабрь 2025</option>
                         </select>
                         <select id="chartType">
-                            <option value="cost">Расходы (₽)</option>
                             <option value="hours">Часы</option>
+                            <option value="cost">Расходы (₽)</option>
                             <option value="members">Участники</option>
                         </select>
                         <button onclick="forceUpdateAnalytics()" class="btn btn-outline">
@@ -213,6 +213,29 @@
                         <div class="card">
                             <h3>Распределение по командам</h3>
                             <div id="teamsDistributionChart"></div>
+                        </div>
+                    </div>
+                    <div class="analytics-table">
+                        <div class="card">
+                            <h3>Разбивка по участникам</h3>
+                            <div class="table-container">
+                                <table id="membersTable" class="analytics-table-content">
+                                    <thead>
+                                        <tr>
+                                            <th>Участник</th>
+                                            <th>Команда</th>
+                                            <th>Продукт</th>
+                                            <th>Проект</th>
+                                            <th>Часы</th>
+                                            <th>Ставка (₽/ч)</th>
+                                            <th>Стоимость (₽)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Данные будут загружены динамически -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                     <div class="analytics-summary">

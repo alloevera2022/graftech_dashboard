@@ -859,6 +859,7 @@ function updateAnalytics() {
     updateProductsChart(selectedMonth, chartType);
     updateTopProjectsChart(selectedMonth);
     updateTeamsDistributionChart(selectedMonth);
+    updateMembersTable(selectedMonth);
     updateSummaryStats(selectedMonth);
 }
 
@@ -1123,6 +1124,54 @@ function updateTeamsDistributionChart(month) {
             `).join('')}
         </div>
     `;
+}
+
+// Update members table
+function updateMembersTable(month) {
+    const monthResources = resources.filter(r => {
+        let resourceMonth = r.month;
+        if (resourceMonth) {
+            if (typeof resourceMonth === 'string') {
+                resourceMonth = resourceMonth.substring(0, 7);
+            } else if (resourceMonth instanceof Date) {
+                resourceMonth = resourceMonth.toISOString().substring(0, 7);
+            }
+        } else {
+            resourceMonth = '2025-01';
+        }
+        return resourceMonth === month;
+    });
+    
+    const tbody = document.querySelector('#membersTable tbody');
+    
+    if (monthResources.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: #6c757d; font-style: italic;">
+                    Нет данных для выбранного месяца
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    // Sort by member name
+    const sortedResources = monthResources.sort((a, b) => a.name.localeCompare(b.name));
+    
+    tbody.innerHTML = sortedResources.map(resource => {
+        const cost = (resource.hoursPerMonth || 0) * (resource.hourlyRate || 0);
+        return `
+            <tr>
+                <td>${resource.name}</td>
+                <td>${resource.team}</td>
+                <td>${resource.product}</td>
+                <td>${resource.project}</td>
+                <td>${resource.hoursPerMonth || 0}</td>
+                <td>${(resource.hourlyRate || 0).toLocaleString('ru-RU')}</td>
+                <td>${cost.toLocaleString('ru-RU')}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 // Update summary stats
